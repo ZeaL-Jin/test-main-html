@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CodePen - Day 001 Login Form</title>
+    <base th:href="@{/}" href="">
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:600'>
+    <link rel="stylesheet" href="css/login/style.css">
+    <link rel="stylesheet" href="layui/css/layui.css"  media="all">
+    <script type="text/javascript" src="jquery/jquery-2.1.1.min.js"></script>
+    <script src="layer/layer.js"></script>
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="login-wrap">
+    <div class="login-html">
+        <label for="tab-1" class="tab">Qu Qu !</label>
+        <input id="tab-1" type="radio" name="tab" class="sign-in" checked><label for="tab-1" class="tab">登录</label>
+        <input id="tab-2" type="radio" name="tab" class="sign-up"><label for="tab-2" class="tab">注册</label>
+        <div class="login-form">
+            <div class="sign-in-htm">
+                <form>
+                    <div class="group">
+                        <label for="loginAcctInput" class="label">账号</label>
+                        <input id="loginAcctInput" name="loginAcct" type="text" class="input">
+                    </div>
+                    <div class="group">
+                        <label for="userPswdInput" class="label">密码</label>
+                        <input id="userPswdInput" type="password" name="userPswd" class="input" data-type="password">
+                    </div>
+                    <div class="group">
+                        <input id="rememberMeCheck" name="rememberMe" value="1" type="checkbox" class="check" checked>
+                        <label for="rememberMeCheck"><span class="icon"></span> 记 住 我</label>
+                    </div>
+                    <div class="group">
+                        <input id="loginBtn"  class="button" value="登录">
+                    </div>
+                </form>
+                <div class="hr"></div>
+                <div class="foot-lnk">
+                    <a href="#forgot">忘记密码?</a>
+                </div>
+            </div>
+            <div class="sign-up-htm">
+                <div class="group">
+                    <label for="reLoginAcctInput" class="label">账号</label>
+                    <input id="reLoginAcctInput" name="loginAcct" type="text" class="input">
+                </div>
+                <div class="group">
+                    <label for="reUserPswdInput" class="label">密码</label>
+                    <input id="reUserPswdInput" type="password" name="userPswd" class="input" data-type="password">
+                </div>
+                <div class="group">
+                    <label for="reRepeatUserPswdInput" class="label">再次输入密码</label>
+                    <input id="reRepeatUserPswdInput" name="repeatUserPswd" type="password" class="input"
+                           data-type="password">
+                </div>
+                <div class="group">
+                    <label for="reUsernameInput" class="label">昵称</label>
+                    <input id="reUsernameInput" name="username" type="text" class="input">
+                </div>
+                <div class="group">
+                    <label for="reUsernameInput" class="label">头像</label>
+                    <input id="uploadHeaderFile" name="headerPicture" type="file" style="display: none;">
+                    <input id="uploadHeaderBtn" type="button" class="button" value="上传头像">
+                </div>
+
+
+
+                <div class="group">
+                    <input id="registerBtn" type="button" class="button" value="注册">
+                </div>
+                <div class="hr"></div>
+                <div class="foot-lnk">
+                    <label for="tab-1">Already Member?</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- partial -->
+
+<script type="text/javascript">
+
+
+
+    $(function () {
+
+
+
+
+        $("#loginBtn").click(function () {
+
+            var loginAcct = $.trim($("#loginAcctInput").val());
+            var userPswd = $.trim($("#userPswdInput").val());
+            var rememberMe = $.trim($("#rememberMeCheck").val());
+
+            if(loginAcct=="" || userPswd == ""){
+                layer.msg("请输入账号或密码");
+                return ;
+            }
+
+
+            var input = {
+
+                "loginAcct": loginAcct,
+                "userPswd": userPswd,
+                "rememberMe": rememberMe,
+            }
+
+            //var data = JSON.stringify(input);
+
+            // 弹出加载层
+
+
+            layer.load(2);
+
+
+            // 为什么整合spring security之后，ajax发送数据不能发送json字符串吗
+            $.ajax({
+
+                "url": "user/login.json",
+                "type": "POST",
+                "data": input,
+                //"contentType": "application/json;charset=UTF-8",
+                "dataType": "json",
+                "success": function (response) {
+                    // 关闭加载层
+                    layer.closeAll('loading');
+                    var result = response.result;
+                    if (result == "SUCCESS") {
+
+                        layer.msg("登录成功");
+                        window.currentLoginAcct = response.data;
+                        window.location.href="http://localhost:8080";
+                    }else if(result=="FAILED"){
+
+                        layer.msg(response.message);
+                    }
+
+                },
+                "error": function (response) {
+                    // 关闭加载层
+                    layer.closeAll('loading');
+                    layer.msg(response.message)
+
+                }
+
+            })
+
+        })
+
+        var headerPicturePath = "";
+
+        // 点击上传头像按钮打开文件选择框
+
+        $("#uploadHeaderBtn").click(function(){
+            $("[name=headerPicture]").click();
+        });
+
+
+        // 当选择并上传头像
+        $("[name=headerPicture]").change(function (event){
+
+            var file = event.target.files[0];
+
+            var formData = new FormData();
+
+            formData.append("picture",file);
+
+            // 弹出加载层
+            layer.load(2);
+
+            $.ajax({
+                "url":"user/upload/picture.json",
+                "type":"POST",
+                "data":formData,
+                "contentType":false,
+                "processData":false,
+                "dataType":"json",
+                "success":function(response){
+
+                    var result = response.result;
+
+                    if(result == "SUCCESS") {
+                        // 关闭加载层
+                        layer.closeAll('loading');
+                        layer.msg("上传成功")
+                        // 如果上传成功，则从响应体数据中获取图片的访问路径
+                        headerPicturePath = response.data;
+                    }
+
+                    if(result == "FAILED") {
+                        // 关闭加载层
+                        layer.closeAll('loading');
+                        layer.msg(response.message);
+                    }
+
+                },
+                "error":function(response){
+                    layer.closeAll('loading');
+                    alert(response.status + " " + response.statusText);
+                }
+            });
+
+
+
+
+
+        })
+
+
+        // 注册ajax
+        $("#registerBtn").click(function () {
+
+            // 获取信息
+            var loginAcct = $.trim($("#reLoginAcctInput").val());
+            var userPswd = $.trim($("#reUserPswdInput").val());
+            var RepeatUserPswd = $.trim($("#reRepeatUserPswdInput").val());
+            var username = $.trim($("#reUsernameInput").val());
+
+            var user = {
+
+                "loginAcct": loginAcct,
+                "userPswd": userPswd,
+                "repeatUserPswd": RepeatUserPswd,
+                "username": username,
+                "headerPicturePath":headerPicturePath,
+            }
+            var data = JSON.stringify(user);
+
+            $.ajax({
+                "url": "user/register.json",
+                "type": "POST",
+                "data": data,
+                "contentType": "application/json;charset=UTF-8",
+                "dataType": "json",
+                "success": function (response) {
+                    var result = response.result;
+                    if (result == "SUCCESS") {
+                        layer.msg("注册成功，跳转到登录页面");
+                    }
+                    // 将登录页面设置为选中
+                    $("#tab-1").prop("checked", "checked");
+
+                },
+                "error": function (response) {
+                    layer.msg(response.message)
+                }
+
+
+            });
+
+
+        })
+
+    })
+
+
+</script>
+
+
+</body>
+</html>
